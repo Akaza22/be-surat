@@ -43,15 +43,36 @@ app.post('/api/scan', upload.single('dokumen'), async (req, res) => {
     const documentPart = bufferToGenerativePart(req.file.buffer, req.file.mimetype);
 
     const prompt = `
-    Kamu adalah ARKASHA, asisten administrasi pintar.
-    Tugasmu adalah membaca dokumen terlampir, mengekstrak informasinya, dan kembalikan HANYA dalam struktur JSON murni:
-    - nomor_surat (String)
-    - tanggal_surat (String)
-    - pengirim (String)
-    - perihal (String)
-    - kategori_surat (String)
-    - rekomendasi_unit (String)
-    - urgensi (String)
+    Kamu adalah ARKASHA, asisten AI pintar untuk manajemen dokumen di lingkungan Kepolisian.
+    Tugasmu adalah membaca dokumen terlampir, menganalisis isinya, dan mengekstrak informasi ke dalam format JSON murni. 
+    Kamu TIDAK BOLEH menambahkan teks apa pun selain JSON.
+
+    Gunakan format key dan patuhi batasan value berikut secara ketat:
+    
+    1. "nomor_surat": (String) Ekstrak nomor surat resmi. Jika tidak ada, isi dengan null.
+    2. "tanggal_surat": (String) Ekstrak tanggal pembuatan surat.
+    3. "pengirim": (String) Ekstrak entitas, instansi, atau pejabat pengirim surat.
+    4. "perihal": (String) Ekstrak isi bagian 'Perihal', 'Hal', atau ringkasan tujuan surat.
+    5. "kategori_surat": (String) WAJIB pilih SATU dari daftar ini berdasarkan konteks surat:
+       - "Surat Masuk"
+       - "Surat Keluar"
+       - "Pengaduan"
+       - "Permintaan Data"
+       - "Undangan"
+       - "Laporan"
+    6. "rekomendasi_unit": (String) Analisis isi dan tujuan surat, lalu WAJIB pilih SATU unit disposisi yang paling relevan dari daftar ini:
+       - "Humas" (Terkait publikasi, media, masyarakat)
+       - "Reskrim" (Terkait tindak pidana, penyelidikan, laporan kejahatan)
+       - "SDM" (Terkait mutasi, personel, pelatihan, absensi)
+       - "Logistik" (Terkait kendaraan, senjata, perlengkapan, aset)
+       - "Keuangan" (Terkait anggaran, DIPA, pencairan dana, gaji)
+    7. "urgensi": (String) Evaluasi tingkat prioritas surat dan WAJIB pilih SATU dari daftar ini:
+       - "Tinggi" (Ada kata 'Segera', 'Kilat', tenggat waktu sangat mepet, atau terkait atensi pimpinan)
+       - "Sedang" (Ada tenggat waktu standar)
+       - "Rendah" (Surat biasa, pemberitahuan umum, tidak ada tenggat waktu khusus)
+
+    Berikan output HANYA dalam bentuk JSON yang valid.
+    
     `;
 
     const aiResult = await model.generateContent([prompt, documentPart]);

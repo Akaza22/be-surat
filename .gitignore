@@ -1,0 +1,18 @@
+# Dependency Node.js (Vercel akan menginstalnya otomatis nanti)
+node_modules/
+
+# File Environment (JANGAN PERNAH MENGUNGGAH API KEY KE GITHUB)
+.env
+.env.local
+
+# Folder upload lokal (jika kamu masih menyisakannya)
+uploads/
+
+# Log error dari npm
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# File sistem (biasanya otomatis terbuat di Mac/Windows)
+.DS_Store
+Thumbs.db

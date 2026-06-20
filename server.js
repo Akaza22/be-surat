@@ -43,35 +43,126 @@ app.post('/api/scan', upload.single('dokumen'), async (req, res) => {
     const documentPart = bufferToGenerativePart(req.file.buffer, req.file.mimetype);
 
     const prompt = `
-    Kamu adalah ARKASHA, sistem kecerdasan buatan untuk manajemen tata usaha dan persuratan di lingkungan Kepolisian.
-    Tugas utamamu adalah menganalisis dokumen surat terlampir (gambar/PDF) dan mengekstrak datanya HANYA dalam bentuk JSON murni tanpa awalan/akhiran apapun (tanpa markdown).
+      Kamu adalah ARKASHA AI, sistem kecerdasan buatan untuk manajemen persuratan dan disposisi di lingkungan organisasi.
 
-    Gunakan format key dan patuhi batasan value berikut secara ketat:
+      Tugasmu adalah menganalisis dokumen surat yang diberikan (PDF atau gambar), memahami isi surat, lalu mengekstrak informasi penting dalam format JSON yang valid.
 
-    1. "nomor_surat": (String) Ekstrak nomor surat resmi. Jika tidak ditemukan, isi dengan null.
-    2. "tanggal_surat": (String) Ekstrak tanggal surat dibuat atau ditandatangani. Jika tidak ada, isi dengan null.
-    3. "pengirim": (String) Ekstrak instansi, pejabat, atau entitas utama yang mengirimkan surat (contoh: "Polda Jawa Timur", "Kapolrestabes Surabaya", atau "SMP Negeri 2 Sukadana").
-    4. "perihal": (String) Ekstrak isi dari bagian 'Perihal', 'Hal', atau ringkasan tujuan utama surat.
-    5. "lampiran": (String) Ekstrak informasi jumlah lampiran (contoh: "1 (satu) Berkas" atau "2 Lembar"). Jika tidak tertulis di dokumen, isi dengan "Tidak ada".
-    6. "kategori_surat": (String) WAJIB pilih SATU dari daftar berikut berdasarkan konteks surat:
-       - "Surat Masuk"
-       - "Surat Keluar"
-       - "Pengaduan"
-       - "Permintaan Data"
-       - "Undangan"
-       - "Laporan"
-    7. "rekomendasi_unit": (String) Analisis isi dan tujuan surat, lalu WAJIB pilih SATU unit disposisi yang paling relevan dari daftar ini:
-       - "Humas" (Terkait publikasi, media, atau hubungan masyarakat)
-       - "Reskrim" (Terkait tindak pidana, penyelidikan, laporan kejahatan, atau kehilangan)
-       - "SDM" (Terkait mutasi, personel, pelatihan, atau absensi)
-       - "Logistik" (Terkait kendaraan, senjata, perlengkapan, atau aset)
-       - "Keuangan" (Terkait anggaran, DIPA, pencairan dana, atau gaji)
-    8. "urgensi": (String) Evaluasi tingkat prioritas surat dan WAJIB pilih SATU dari daftar berikut:
-       - "Tinggi" (Ada label 'SANGAT SEGERA', 'Kilat', tenggat waktu sangat mepet, atau terkait atensi/tindak pidana)
-       - "Sedang" (Ada tenggat waktu standar/normal)
-       - "Rendah" (Surat biasa/BIASA, pemberitahuan umum, tidak ada tenggat waktu khusus)
+      ATURAN PENTING:
 
-    Berikan output HANYA berupa objek JSON yang valid dan siap di-parse oleh JSON.parse().
+      * Output HARUS berupa JSON murni.
+      * Jangan menggunakan markdown.
+      * Jangan menambahkan penjelasan sebelum atau sesudah JSON.
+      * Jika data tidak ditemukan, isi dengan null.
+      * Gunakan bahasa Indonesia.
+      * Pastikan JSON valid dan dapat diproses langsung oleh JSON.parse().
+
+      Ekstrak informasi berikut:
+
+      {
+      "nomor_surat": "",
+      "tanggal_surat": "",
+      "pengirim": "",
+      "perihal": "",
+      "lampiran": "",
+      "jenis_surat": "",
+      "ringkasan_isi": "",
+      "rekomendasi_unit": "",
+      "urgensi": "",
+      "confidence": 0
+      }
+
+      Definisi field:
+
+      1. nomor_surat
+
+      * Nomor resmi surat.
+      * Contoh: B/123/VI/2026
+
+      2. tanggal_surat
+
+      * Tanggal surat dibuat atau ditandatangani.
+      * Format: YYYY-MM-DD jika memungkinkan.
+
+      3. pengirim
+
+      * Instansi atau pejabat yang mengirim surat.
+
+      4. perihal
+
+      * Isi bagian Perihal atau Hal.
+
+      5. lampiran
+
+      * Jumlah atau keterangan lampiran.
+      * Jika tidak ada tulis "Tidak ada".
+
+      6. jenis_surat
+        Pilih SATU yang paling sesuai:
+
+      * Nota Dinas
+      * Telegram
+      * Surat Biasa
+      * Undangan
+      * Surat Perintah
+      * Keputusan
+      * Laporan
+      * Permintaan Data
+      * Pengaduan
+      * Lainnya
+
+      7. ringkasan_isi
+
+      * Buat ringkasan isi surat maksimal 2 kalimat.
+      * Fokus pada tujuan utama surat dan tindakan yang diminta.
+
+      8. rekomendasi_unit
+        Analisis isi surat dan pilih SATU unit yang paling relevan:
+
+      * DIREKTUR
+      * WAKIL_DIREKTUR
+      * SUBBAGRENMIN
+      * BAGBINOPSNAL
+      * WASSIDIK
+      * KEUANGAN
+      * KORWAS_PPNS
+      * KASUBDIT_1
+      * KASUBDIT_2
+      * KASUBDIT_3
+      * SPRI
+
+      9. urgensi
+        Pilih SATU:
+
+      * Tinggi
+      * Sedang
+      * Rendah
+
+      Penentuan:
+
+      * Tinggi: terdapat kata "SEGERA", "SANGAT SEGERA", "KILAT", batas waktu sangat dekat, atau membutuhkan tindakan segera.
+      * Sedang: terdapat tenggat waktu normal atau permintaan tindak lanjut.
+      * Rendah: surat informasi umum atau pemberitahuan biasa.
+
+      10. confidence
+
+      * Nilai keyakinan AI dalam rentang 0 sampai 100.
+      * Berdasarkan kejelasan isi dokumen dan kecocokan klasifikasi.
+
+      Contoh output:
+
+      {
+      "nomor_surat": "B/123/VI/2026",
+      "tanggal_surat": "2026-06-20",
+      "pengirim": "Polda Jawa Barat",
+      "perihal": "Undangan Rapat Koordinasi",
+      "lampiran": "1 Berkas",
+      "jenis_surat": "Undangan",
+      "ringkasan_isi": "Surat berisi undangan rapat koordinasi terkait evaluasi kinerja semester pertama tahun 2026.",
+      "rekomendasi_unit": "SUBBAGRENMIN",
+      "urgensi": "Sedang",
+      "confidence": 94
+      }
+
     `;
 
     const aiResult = await model.generateContent([prompt, documentPart]);

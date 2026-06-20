@@ -143,7 +143,24 @@ app.post('/api/scan', upload.single('dokumen'), async (req, res) => {
       * Sedang: terdapat tenggat waktu normal atau permintaan tindak lanjut.
       * Rendah: surat informasi umum atau pemberitahuan biasa.
 
-      10. confidence
+      10. "tujuan_surat": (String)
+
+          WAJIB ekstrak pihak, jabatan, atau instansi yang menjadi penerima surat sebagaimana tertulis pada dokumen.
+
+          Contoh:
+          - "Kapolda Jawa Barat"
+          - "Direktur Reserse Siber Polda Jawa Barat"
+          - "Kepala SMP Negeri 2 Sukadana"
+          - "Kepala Dinas Pendidikan Kabupaten Bekasi"
+
+          Aturan:
+          - Ambil tujuan surat yang benar-benar tertulis pada bagian tujuan/alamat surat.
+          - Jangan mengisi berdasarkan hasil analisis AI.
+          - Jangan mengisi unit disposisi internal.
+          - Jika terdapat beberapa penerima, pilih penerima utama.
+          - Jika tidak ditemukan, isi null.
+
+      11. confidence
 
       * Nilai keyakinan AI dalam rentang 0 sampai 100.
       * Berdasarkan kejelasan isi dokumen dan kecocokan klasifikasi.
@@ -154,6 +171,7 @@ app.post('/api/scan', upload.single('dokumen'), async (req, res) => {
       "nomor_surat": "B/123/VI/2026",
       "tanggal_surat": "2026-06-20",
       "pengirim": "Polda Jawa Barat",
+      "tujuan_surat": "Kapolres Jajaran Polda Jawa Barat",
       "perihal": "Undangan Rapat Koordinasi",
       "lampiran": "1 Berkas",
       "jenis_surat": "Undangan",

@@ -145,20 +145,21 @@ app.post('/api/scan', upload.single('dokumen'), async (req, res) => {
 
       10. "tujuan_surat": (String)
 
-          WAJIB ekstrak pihak, jabatan, atau instansi yang menjadi penerima surat sebagaimana tertulis pada dokumen.
+          Ekstrak tujuan surat HANYA jika terdapat penerima surat yang eksplisit
+          seperti:
 
-          Contoh:
-          - "Kapolda Jawa Barat"
-          - "Direktur Reserse Siber Polda Jawa Barat"
-          - "Kepala SMP Negeri 2 Sukadana"
-          - "Kepala Dinas Pendidikan Kabupaten Bekasi"
+          - Kepada Yth
+          - Yth.
+          - Ditujukan kepada
+          - Kepada
 
-          Aturan:
-          - Ambil tujuan surat yang benar-benar tertulis pada bagian tujuan/alamat surat.
-          - Jangan mengisi berdasarkan hasil analisis AI.
-          - Jangan mengisi unit disposisi internal.
-          - Jika terdapat beberapa penerima, pilih penerima utama.
-          - Jika tidak ditemukan, isi null.
+          Jangan menggunakan:
+          - Nama instansi pada kop surat
+          - Nama instansi penerima disposisi
+          - Nama unit organisasi pada header dokumen
+
+          Jika tujuan surat tidak ditemukan secara eksplisit,
+          isi dengan null.
 
       11. confidence
 
